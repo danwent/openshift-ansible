@@ -1,6 +1,6 @@
 ---
-- name: include package installs
-  import_tasks: install_rpms.yml
+#- name: include package installs
+#  import_tasks: install_rpms.yml
 
 - name: create the directory for node
   file:

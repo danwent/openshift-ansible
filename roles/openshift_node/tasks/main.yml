@@ -65,19 +65,19 @@
   import_tasks: config.yml
 
 #### Storage class plugins here ####
-- name: NFS storage plugin configuration
-  import_tasks: storage_plugins/nfs.yml
-
-- name: GlusterFS storage plugin configuration
-  import_tasks: glusterfs.yml
-  when: "'glusterfs' in osn_storage_plugin_deps"
-
-- name: Ceph storage plugin configuration
-  import_tasks: storage_plugins/ceph.yml
-  when: "'ceph' in osn_storage_plugin_deps"
-
-- name: iSCSI storage plugin configuration
-  import_tasks: storage_plugins/iscsi.yml
-  when: "'iscsi' in osn_storage_plugin_deps"
+#- name: NFS storage plugin configuration
+#  import_tasks: storage_plugins/nfs.yml
+#
+#- name: GlusterFS storage plugin configuration
+#  import_tasks: glusterfs.yml
+#  when: "'glusterfs' in osn_storage_plugin_deps"
+#
+#- name: Ceph storage plugin configuration
+#  import_tasks: storage_plugins/ceph.yml
+#  when: "'ceph' in osn_storage_plugin_deps"
+#
+#- name: iSCSI storage plugin configuration
+#  import_tasks: storage_plugins/iscsi.yml
+#  when: "'iscsi' in osn_storage_plugin_deps"
 
 ##### END Storage #####

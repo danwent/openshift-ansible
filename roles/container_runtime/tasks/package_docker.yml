@@ -14,16 +14,16 @@
 # Make sure Docker is installed, but does not update a running version.
 # Docker upgrades are handled by a separate playbook.
 # Note: The curr_docker_version.stdout check can be removed when https://github.com/ansible/ansible/issues/33187 gets fixed.
-- name: Install Docker
-  package:
-    name: "{{ pkg_list | join(',') }}"
-    state: present
-  register: result
-  until: result is succeeded
-  vars:
-    pkg_list:
-    - "docker{{ '-' + docker_version if docker_version is defined else '' }}"
-    - skopeo
+#- name: Install Docker
+#  package:
+#    name: "{{ pkg_list | join(',') }}"
+#    state: present
+#  register: result
+#  until: result is succeeded
+#  vars:
+#    pkg_list:
+#    - "docker{{ '-' + docker_version if docker_version is defined else '' }}"
+#    - skopeo
 
 - block:
   # Extend the default Docker service unit file when using iptables-services
@@ -106,8 +106,7 @@
       {% if l2_docker_log_options != [] %} {{ l2_docker_log_options |  lib_utils_oo_split() | lib_utils_oo_prepend_strings_in_list('--log-opt ') | join(' ')}}{% endif %} \
       {% if (openshift_docker_hosted_registry_insecure | bool) and openshift_docker_hosted_registry_network %} --insecure-registry={{ openshift_docker_hosted_registry_network }} {% endif %} \
       {% if docker_options is defined %} {{ docker_options }}{% endif %} \
-      {% if openshift_docker_options %} {{ openshift_docker_options }}{% endif %} \
-      --signature-verification={{ openshift_docker_signature_verification | bool }}'"
+      {% if openshift_docker_options %} {{ openshift_docker_options }}{% endif %}'"
   when: docker_check.stat.isreg is defined and docker_check.stat.isreg
   notify:
   - restart container runtime

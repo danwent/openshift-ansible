@@ -1,0 +1,2 @@
+---
+cilium_image: "docker.io/cilium/cilium:v1.4.1"
