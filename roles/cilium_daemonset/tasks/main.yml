@@ -1,0 +1,72 @@
+---
+- name: Cilium | Run kube proxy
+  run_once: true
+  import_role:
+    name: kube_proxy_and_dns
+
+- name: Cilium | oc adm policy add-scc-to-user privileged system:serviceaccount:kube-system:cilium
+  oc_adm_policy_user:
+    user: system:serviceaccount:kube-system:cilium
+    resource_kind: scc
+    resource_name: privileged
+    state: present
+
+- name: Cilium | oc adm policy add-scc-to-user privileged system:serviceaccount:kube-system:cilium-operator
+  oc_adm_policy_user:
+    user: system:serviceaccount:kube-system:cilium-operator
+    resource_kind: scc
+    resource_name: privileged
+    state: present
+
+- name: Cilium | Set default selector for kube-system
+  command: >
+    {{ openshift_client_binary }}
+    --config={{ openshift.common.config_base }}/master/admin.kubeconfig
+    annotate  ns kube-system openshift.io/node-selector="" --overwrite
+
+- name: Cilium | Create temp directory
+  command: mktemp -d /tmp/openshift-ansible-XXXXXXX
+  register: mktemp
+  changed_when: False
+
+- name: Cilium | Set etcd endpoints to point to openshift master etcd
+  set_fact:
+    cilium_etcd_endpoints: "{{ hostvars[groups.oo_first_master.0].openshift_master_etcd_urls | join(',') }}"
+
+- name: Cilium | delete any old cilium etcd secrets
+  command: >
+    {{ openshift_client_binary }}
+    --config={{ openshift.common.config_base }}/master/admin.kubeconfig
+    delete secret -n kube-system cilium-etcd-secrets \
+  ignore_errors: yes
+
+- name: Cilium | create secrets for openshift master etcd
+  command: >
+    {{ openshift_client_binary }}
+    --config={{ openshift.common.config_base }}/master/admin.kubeconfig
+    create secret generic -n kube-system cilium-etcd-secrets \
+    --from-file=etcd-ca={{openshift.common.config_base }}/master/master.etcd-ca.crt \
+    --from-file=etcd-client-key={{ openshift.common.config_base }}/master/master.etcd-client.key \
+    --from-file=etcd-client-crt={{ openshift.common.config_base }}/master/master.etcd-client.crt
+
+
+- name: Cilium | Populate Cilium YAML template
+  template:
+    dest: "{{ mktemp.stdout }}/cilium.yaml"
+    src: cilium.yaml.j2
+
+- name: Cilium| Deploy Cilium Daemonset
+  run_once: true
+  command: >
+    {{ openshift_client_binary }} apply
+    -f {{ mktemp.stdout }}/cilium.yaml
+    --config={{ openshift.common.config_base }}/master/admin.kubeconfig
+  register: cilium_create_cmd
+  failed_when: "cilium_create_cmd.rc != 0"
+  changed_when: "('created' in cilium_create_cmd.stdout) or ('configured' in cilium_create_cmd.stdout)"
+
+- name: Cilium | Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False
