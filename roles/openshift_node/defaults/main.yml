@@ -80,6 +80,12 @@ default_r_openshift_node_os_firewall_allow:
 - service: OpenShift OVS sdn
   port: 4789/udp
   cond: openshift_use_openshift_sdn | bool
+- service: dns udp
+  port: 53/udp
+  cond: openshift_use_cilium | bool
+- service: dns tcp
+  port: 53/tcp
+  cond: openshift_use_cilium | bool
 - service: Calico BGP Port
   port: 179/tcp
   cond: "{{ openshift_node_use_calico }}"
